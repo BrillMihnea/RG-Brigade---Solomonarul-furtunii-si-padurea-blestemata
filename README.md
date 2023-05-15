@@ -1,0 +1,2 @@
+# RG-Brigade---Solomonarul-furtunii-si-padurea-blestemata
+Aici va sta proiectul oficial cu jocul ptr Vianu game jam. Puteti avea cate proiecte secundare vreti, dar aici est proiectul original. Va rog sa va documentati despre cum functioneaza git hub-ul, sa nu avem probleme ca "am uitat sa dau upload". De asemenea, anuntati pe discord cu un @everyone cand lucrati direct pe proiect ca sa nu avem probleme.
