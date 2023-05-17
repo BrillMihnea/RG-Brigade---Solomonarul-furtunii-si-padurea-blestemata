@@ -1,6 +1,8 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerControllerScript : MonoBehaviour
 {
@@ -36,15 +38,29 @@ public class PlayerControllerScript : MonoBehaviour
     public float dashTime;
     public float dashCooldown;
     private float dashCooldownCounter;
+    public TrailRenderer tr;
 
     public int extraJumps;
     private int jumpsLeft;
 
     public float glideFallSpeed;
+    private bool isGliding;
 
     public bool isActiveDJ;
     public bool isActiveDash;
     public bool isActiveGlide;
+
+    public ParticleSystem LandingParticles;
+    public Transform RespawnPoint;
+
+    private void Start()
+    {
+        if (SceneManager.GetActiveScene().buildIndex >= 6) isActiveDJ = true;
+        else isActiveDJ = false;
+        if (SceneManager.GetActiveScene().buildIndex >= 11) isActiveDash = true;
+        else isActiveDash = false;
+        isActiveGlide = false;
+    }
 
     private void FixedUpdate()
     {
@@ -55,6 +71,7 @@ public class PlayerControllerScript : MonoBehaviour
         rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
         if (facingRight == false && moveInput > 0 || facingRight == true && moveInput < 0) Flip();
     }
+
     private void Update()
     {
         if (isDashing) return;
@@ -109,7 +126,12 @@ public class PlayerControllerScript : MonoBehaviour
         else dashCooldownCounter -= Time.deltaTime;
 
         //------------------------------------GLIDE-----------------------------------------------
-        if (isActiveGlide && Input.GetKey(KeyCode.LeftShift) && rb.velocity.y < 0) rb.velocity = new Vector2(rb.velocity.x, -glideFallSpeed);
+        if (isActiveGlide && Input.GetKey(KeyCode.LeftShift) && rb.velocity.y < 0)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, -glideFallSpeed);
+            isGliding = true;
+        }
+        else isGliding = false;
 
         //---------------------------------------MAX FALL SPEED------------------------------------
         if (rb.velocity.y < -maxFallSpeed) rb.velocity = new Vector2(rb.velocity.x, -maxFallSpeed);
@@ -136,12 +158,26 @@ public class PlayerControllerScript : MonoBehaviour
         rb.gravityScale = 0;
         if (facingRight) rb.velocity = new Vector2(dashSpeed, 0);
         else rb.velocity = new Vector2(-dashSpeed, 0);
+        tr.emitting = true;
         yield return new WaitForSeconds(dashTime);
         rb.gravityScale = originalGravity;
         isDashing = false;
+        tr.emitting = false;
     }
-    private void KillAndRespawn(float x, float y)
+
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        transform.position = new Vector3(x, y, 0);
+        if (isGrouded() && !isGliding) Instantiate(LandingParticles, groundCheck.position, groundCheck.rotation);
+        if (collision.collider.tag == "Enemy")
+        {
+            rb.velocity = Vector2.zero;
+            transform.position = RespawnPoint.position;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "Complete") SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        gameObject.transform.position = new Vector3(-15, -6, 1);
     }
 }
